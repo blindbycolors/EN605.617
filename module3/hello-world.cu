@@ -4,8 +4,8 @@
 
 #include <stdio.h>
 
-#define N 16
-#define BLOCK_SIZE 16
+#define N 1
+#define BLOCK_SIZE 64
 #define NUM_BLOCKS N/BLOCK_SIZE
 
 #define ARRAY_SIZE N
