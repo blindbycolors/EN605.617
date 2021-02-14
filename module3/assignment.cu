@@ -9,43 +9,31 @@
 enum Operations { ADDITION, SUBTRACTION, MULTIPLICATION, MODULUS };
 
 __global__ void
-do_addition(int *a, int *b, float *out, int n)
+do_addition(int *a, int *b, float *out)
 {
     auto tid = blockIdx.x * blockDim.x + threadIdx.x;
-    if (tid < n)
-    {
-        out[tid] = a[tid] + b[tid];
-    }
+    out[tid] = a[tid] + b[tid];
 }
 
 __global__ void
-do_subtraction(int *a, int *b, float *out, int n)
+do_subtraction(int *a, int *b, float *out)
 {
     auto tid = blockIdx.x * blockDim.x + threadIdx.x;
-    if (tid < n)
-    {
-        out[tid] = a[tid] - b[tid];
-    }
+    out[tid] = a[tid] - b[tid];
 }
 
 __global__ void
-do_multiplication(int *a, int *b, float *out, int n)
+do_multiplication(int *a, int *b, float *out)
 {
     auto tid = blockIdx.x * blockDim.x + threadIdx.x;
-    if (tid < n)
-    {
-        out[tid] = a[tid] * b[tid];
-    }
+    out[tid] = a[tid] * b[tid];
 }
 
 __global__ void
-do_modulus(int *a, int *b, float *out, int n)
+do_modulus(int *a, int *b, float *out)
 {
     auto tid = blockIdx.x * blockDim.x + threadIdx.x;
-    if (tid < n)
-    {
-        out[tid] =  (float) (a[tid] % b[tid]);
-    }
+    out[tid] =  (float) (a[tid] % b[tid]);
 }
 
 void
@@ -104,6 +92,7 @@ doOperations(int totalThreads, int numBlocks, int blockSize)
     for (unsigned int i = 0; i < totalThreads; ++i)
     {
         a[i] = i;
+        // Note: Limiting to (0,3] since modulus by 0 causes undefined behavior
         b[i] = rand() % MAX + MIN;
     }
 
@@ -121,17 +110,15 @@ doOperations(int totalThreads, int numBlocks, int blockSize)
     cudaMemcpy(d_a, a, sizeof(int) * totalThreads, cudaMemcpyHostToDevice);
     cudaMemcpy(d_b, b, sizeof(int) * totalThreads, cudaMemcpyHostToDevice);
 
-
     // perform the operations
     auto start = std::chrono::high_resolution_clock::now();
-    do_addition<<<numBlocks, blockSize>>>(d_a, d_b, d_addOut, totalThreads);
+    do_addition<<<numBlocks, blockSize>>>(d_a, d_b, d_addOut);
     auto addStop = std::chrono::high_resolution_clock::now();
-    do_subtraction<<<numBlocks, blockSize>>>(d_a, d_b, d_subOut, totalThreads);
+    do_subtraction<<<numBlocks, blockSize>>>(d_a, d_b, d_subOut);
     auto subStop = std::chrono::high_resolution_clock::now();
-    do_multiplication<<<numBlocks,
-    blockSize>>>(d_a, d_b, d_multOut, totalThreads);
+    do_multiplication<<<numBlocks, blockSize>>>(d_a, d_b, d_multOut);
     auto multStop = std::chrono::high_resolution_clock::now();
-    do_modulus<<<numBlocks, blockSize>>>(d_a, d_b, d_modOut, totalThreads);
+    do_modulus<<<numBlocks, blockSize>>>(d_a, d_b, d_modOut);
     auto modStop = std::chrono::high_resolution_clock::now();
 
     // Transfer data from device to host
