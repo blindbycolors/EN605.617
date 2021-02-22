@@ -14,11 +14,13 @@ int main(int argc, char **argv)
         if (program.compare("--do_opt") == 0)
         {
             doMathOperations(argc, argv);
-        } else if (program.compare("--cipher") == 0)
+        }
+        else if (program.compare("--cipher") == 0)
         {
             doCipher(argc, argv);
         }
-    } else
+    }
+    else
     {
         printf("No program specified. Performing all operations and cipher\n");
         doMathOperations(argc, argv);
@@ -87,7 +89,8 @@ parseMathArgv(const int argc, char **pString, std::vector<int> &totalThreads,
         if (i % 2 == 0)
         {
             totalThreads.push_back(atoi(pString[i]));
-        } else
+        }
+        else
         {
             blockSizes.push_back(atoi(pString[i]));
         }
@@ -100,8 +103,7 @@ void doMathOperations(int argc, char **argv)
     // Default operations if there were no args provided
     if (uniqueCombos.empty())
     {
-        int totalThreads = 1 << 20;
-        int blockSize = 512;
+        int totalThreads = 1 << 20, blockSize = 512;
         int numBlocks = totalThreads / blockSize;
 
         printf("Completing operations with default values:"
@@ -139,7 +141,8 @@ void doMathOperations(int argc, char **argv)
         FREE_PAGEABLE(aPageable, bPageable)
 
         printf("----------------------------------------------------\n");
-    } else
+    }
+    else
     {
         doCombos(uniqueCombos);
     }
@@ -190,9 +193,7 @@ void doCombos(const std::vector<std::pair<int, int>> uniqueCombos)
 
 void doCipher(int argc, char **argv)
 {
-    auto offset = 3;
-    auto strLength = 64;
-    auto blockSize = 32;
+    auto offset = 3, strLength = 64, blockSize = 32;
     auto numBlocks = strLength / blockSize;
 
     if (argc == 4)
@@ -200,9 +201,7 @@ void doCipher(int argc, char **argv)
         //do default example
         offset = atoi(argv[2]);
         strLength = atoi(argv[3]);
-
         numBlocks = strLength / blockSize;
-
         if (strLength % blockSize != 0)
         {
             ++numBlocks;
