@@ -155,7 +155,7 @@ void doCombos(const std::vector<std::pair<int, int>> uniqueCombos)
     for (auto combo : uniqueCombos)
     {
         totalThreads = combo.first;
-        blockSize = combo.first;
+        blockSize = combo.second;
         numBlocks = totalThreads / blockSize;
 
         printf("Completing operations with input values: Total Threads (%d)"
