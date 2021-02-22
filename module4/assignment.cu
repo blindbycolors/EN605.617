@@ -219,7 +219,8 @@ void doCipher(int argc, char **argv)
     printf("Original String:\t");
     for (auto i = 0; i < strLength; ++i)
     {
-        auto randomChar = rand() % (MAX_PRINTABLE - MIN_PRINTABLE) + MIN_PRINTABLE;
+        auto randomChar = rand() % (MAX_PRINTABLE - MIN_PRINTABLE) +
+                          MIN_PRINTABLE;
         aPageable[i] = randomChar;
         aPinned[i] = randomChar;
         printf("%c", aPageable[i]);

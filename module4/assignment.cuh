@@ -8,7 +8,7 @@
 
 std::vector<std::pair<int,int>> parseOperations(int, char **);
 void printWarning(int , const int, const int);
-void parseMathArgv(const int , char **, std::vector<int>&, std::vector<int>& );
+void parseMathArgv(const int , char **, std::vector<int>&, std::vector<int>&);
 void doMathOperations(int, char **);
 void doCombos(const std::vector<std::pair<int, int>>);
 void doCipher(int, char **);

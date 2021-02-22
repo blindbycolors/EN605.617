@@ -5,7 +5,7 @@
 #include <cstdio>
 #include "operations.cuh"
 
-#define ACTIVATE_OP_KERNEL(opFunc, numBlocks, blockSize, d_a, d_b, d_out)                                                                         \
+#define ACTIVATE_OP_KERNEL(opFunc, numBlocks, blockSize, d_a, d_b, d_out)      \
     cudaEvent_t kernelStart, kernelStop;                                       \
     auto delta = 0.0F;                                                         \
     checkCuda(cudaEventCreate(&kernelStart));                                  \
@@ -19,21 +19,21 @@
     checkCuda(cudaEventDestroy(kernelStop));
 
 #define ACTIVATE_CAESER_KERNEL(opFunction, numBlocks, blockSize, totalThreads, \
-d_a, d_out, offset) \
+                               d_a, d_out, offset)                             \
     cudaEvent_t kernelStart, kernelStop;                                       \
     auto delta = 0.0F;                                                         \
-    checkCuda(cudaEventCreate(&kernelStart));                                \
+    checkCuda(cudaEventCreate(&kernelStart));                                  \
     checkCuda(cudaEventCreate(&kernelStop));                                   \
-    checkCuda(cudaEventRecord(kernelStart, 0));\
+    checkCuda(cudaEventRecord(kernelStart, 0));                                \
     opFunction<<<numBlocks, blockSize>>>(d_a, totalThreads, offset, d_out);    \
-    checkCuda(cudaEventRecord(kernelStop, 0));          \
-    checkCuda(cudaEventSynchronize(kernelStop));    \
-    checkCuda(cudaEventElapsedTime(&delta, kernelStart, kernelStop)); \
+    checkCuda(cudaEventRecord(kernelStop, 0));                                 \
+    checkCuda(cudaEventSynchronize(kernelStop));                               \
+    checkCuda(cudaEventElapsedTime(&delta, kernelStart, kernelStop));          \
     checkCuda(cudaEventDestroy(kernelStart));                                  \
     checkCuda(cudaEventDestroy(kernelStop));
 
-#define DEVICE_ALLOCATE(a, type, totalThreads) \
-    type *a; \
+#define DEVICE_ALLOCATE(a, type, totalThreads)                                 \
+    type *a;                                                                   \
     checkCuda(cudaMalloc((void**) &a, sizeof(type) * totalThreads));
 
 __global__ void kernel_addition(const int *a, const int *b, float *out)
@@ -91,8 +91,6 @@ float hostAdd(const int numBlocks, const int blockSize,
     DEVICE_ALLOCATE(d_a, int, totalThreads);
     DEVICE_ALLOCATE(d_b, int, totalThreads);
 
-    auto h_out = (float *) malloc(sizeof(float) * totalThreads);
-
     // Copy from host to device
     checkCuda(cudaMemcpy(d_a, h_a, sizeof(int) * totalThreads,
                          cudaMemcpyHostToDevice));
@@ -103,13 +101,9 @@ float hostAdd(const int numBlocks, const int blockSize,
     ACTIVATE_OP_KERNEL(kernel_addition, numBlocks, blockSize, d_a, d_b,
                        d_out);
 
-    checkCuda(cudaMemcpy(h_out, d_out, sizeof(int) * totalThreads,
-                         cudaMemcpyDeviceToHost));
-
     cudaFree(d_a);
     cudaFree(d_b);
     cudaFree(d_out);
-    free(h_out);
 
     return delta;
 }
@@ -122,8 +116,6 @@ float hostSubtract(const int numBlocks, const int blockSize,
     DEVICE_ALLOCATE(d_a, int, totalThreads);
     DEVICE_ALLOCATE(d_b, int, totalThreads);
 
-    auto h_out = (float *) malloc(sizeof(float) * totalThreads);
-
     // Copy from host to device
     checkCuda(cudaMemcpy(d_a, h_a, sizeof(int) * totalThreads,
                          cudaMemcpyHostToDevice));
@@ -134,13 +126,9 @@ float hostSubtract(const int numBlocks, const int blockSize,
     ACTIVATE_OP_KERNEL(kernel_subtraction, numBlocks, blockSize, d_a, d_b,
                        d_out);
 
-    checkCuda(cudaMemcpy(h_out, d_out, sizeof(int) * totalThreads,
-                         cudaMemcpyDeviceToHost));
-
     cudaFree(d_a);
     cudaFree(d_b);
     cudaFree(d_out);
-    free(h_out);
 
     return delta;
 }
@@ -154,8 +142,6 @@ float hostMultiply(const int numBlocks, const int blockSize,
     DEVICE_ALLOCATE(d_a, int, totalThreads);
     DEVICE_ALLOCATE(d_b, int, totalThreads);
 
-    auto h_out = (float *) malloc(sizeof(float) * totalThreads);
-
     // Copy from host to device
     checkCuda(cudaMemcpy(d_a, h_a, sizeof(int) * totalThreads,
                          cudaMemcpyHostToDevice));
@@ -166,13 +152,9 @@ float hostMultiply(const int numBlocks, const int blockSize,
     ACTIVATE_OP_KERNEL(kernel_multiplication, numBlocks, blockSize, d_a, d_b,
                        d_out);
 
-    checkCuda(cudaMemcpy(h_out, d_out, sizeof(int) * totalThreads,
-                         cudaMemcpyDeviceToHost));
-
     cudaFree(d_a);
     cudaFree(d_b);
     cudaFree(d_out);
-    free(h_out);
 
     return delta;
 }
@@ -185,8 +167,6 @@ float hostMod(const int numBlocks, const int blockSize,
     DEVICE_ALLOCATE(d_a, int, totalThreads);
     DEVICE_ALLOCATE(d_b, int, totalThreads);
 
-    auto h_out = (float *) malloc(sizeof(float) * totalThreads);
-
     // Copy from host to device
     checkCuda(cudaMemcpy(d_a, h_a, sizeof(int) * totalThreads,
                          cudaMemcpyHostToDevice));
@@ -196,13 +176,9 @@ float hostMod(const int numBlocks, const int blockSize,
     // Run the kernel function
     ACTIVATE_OP_KERNEL(kernel_modulus, numBlocks, blockSize, d_a, d_b, d_out);
 
-    checkCuda(cudaMemcpy(h_out, d_out, sizeof(int) * totalThreads,
-                         cudaMemcpyDeviceToHost));
-
     cudaFree(d_a);
     cudaFree(d_b);
     cudaFree(d_out);
-    free(h_out);
 
     return delta;
 }

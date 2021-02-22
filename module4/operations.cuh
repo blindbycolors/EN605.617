@@ -14,31 +14,31 @@
 #define MAX_PRINTABLE 126
 #define MAX_ALPHA 94
 
-#define HOST_ALLOCATE_PAGEABLE(total, a, type)                   \
+#define HOST_ALLOCATE_PAGEABLE(total, a, type)                                 \
     type* a = (type *) malloc(sizeof(type) * total);
 
-#define HOST_ALLOCATE_PINNED(total, a, type)                   \
-    type * a;                                                           \
+#define HOST_ALLOCATE_PINNED(total, a, type)                                   \
+    type * a;                                                                  \
     checkCuda(cudaMallocHost((void**) &a, sizeof(type) * total));
 
-#define DO_OPERATIONS(a, b, function, duration, opType) \
-    auto duration = function(numBlocks, blockSize, totalThreads, a, b);\
-    printf("%s\n", opType) ;\
-    printf("\tDuration: %f\n\tEffective bandwidth (GB/s): %f\n",\
+#define DO_OPERATIONS(a, b, function, duration, opType)                        \
+    auto duration = function(numBlocks, blockSize, totalThreads, a, b);        \
+    printf("%s\n", opType) ;                                                   \
+    printf("\tDuration: %f\n\tEffective bandwidth (GB/s): %f\n",               \
     duration, totalThreads*4*3/duration/1e6);
 
-#define FREE_PINNED(a, ...) \
-    cudaFreeHost(a);        \
+#define FREE_PINNED(a, ...)                                                    \
+    cudaFreeHost(a);                                                           \
     _FREE_PINNED(__VA_ARGS__);
 
-#define _FREE_PINNED(a, ...) \
+#define _FREE_PINNED(a, ...)                                                   \
     cudaFreeHost(a);
 
-#define FREE_PAGEABLE(a, ...) \
-    free(a);\
+#define FREE_PAGEABLE(a, ...)                                                  \
+    free(a);                                                                   \
     _FREE_PAGEABLE(__VA_ARGS__);
 
-#define  _FREE_PAGEABLE(a, ...) \
+#define  _FREE_PAGEABLE(a, ...)                                                \
     free(a);
 
 // Convenience function for checking CUDA runtime API results
