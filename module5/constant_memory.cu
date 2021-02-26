@@ -13,7 +13,7 @@
 
 #define KERNEL_LOOP 65536
 
-#define WORK_SIZE 256
+#define WORK_SIZE 2048
 
 typedef unsigned short int u16;
 typedef unsigned int u32;
@@ -57,7 +57,7 @@ __global__ void const_test_gpu_const(unsigned int * const data, const unsigned i
 }
 
 __host__ void gpu_kernel(void) {
-	const unsigned int num_elements = (128 * 1024);
+	const unsigned int num_elements = (128 * (1 << 20));
 	const unsigned int num_threads = 256;
 	const unsigned int num_blocks = (num_elements + (num_threads - 1)) / num_threads;
 	const unsigned int num_bytes = num_elements * sizeof(unsigned int);
@@ -80,10 +80,10 @@ __host__ void gpu_kernel(void) {
 			cudaMalloc(&data_gpu, num_bytes);
 			cudaEventCreate(&kernel_start1);
 			cudaEventCreate(&kernel_start2);
-			
+
 					cudaEventCreateWithFlags(&kernel_stop1,
 							cudaEventBlockingSync);
-			
+
 					cudaEventCreateWithFlags(&kernel_stop2,
 							cudaEventBlockingSync);
 
@@ -105,7 +105,7 @@ __host__ void gpu_kernel(void) {
 
 			cudaEventRecord(kernel_stop1, 0);
 			cudaEventSynchronize(kernel_stop1);
-			
+
 					cudaEventElapsedTime(&delta_time1, kernel_start1,
 							kernel_stop1);
 
@@ -117,7 +117,7 @@ __host__ void gpu_kernel(void) {
 
 			cudaEventRecord(kernel_stop2, 0);
 			cudaEventSynchronize(kernel_stop2);
-			
+
 					cudaEventElapsedTime(&delta_time2, kernel_start2,
 							kernel_stop2);
 
@@ -175,32 +175,42 @@ void execute_host_functions()
 
 void execute_gpu_functions()
 {
-	u32 *data = NULL;
-	const u32 num_threads = 256;
-	const u32 num_blocks = WORK_SIZE/num_threads;
+	// u32 *data = NULL;
+	// const u32 num_threads = 256;
+	// const u32 num_blocks = WORK_SIZE/num_threads;
+	//
+	// unsigned int idata[WORK_SIZE], odata[WORK_SIZE];
+	// int i;
+	// for (i = 0; i < WORK_SIZE; i++){
+	// 	idata[i] = (unsigned int) i;
+	// }
+	//
+	// cudaMalloc((void** ) &data, sizeof(int) * WORK_SIZE);
+	//
+	// cudaMemcpy(data, idata, sizeof(unsigned int) * WORK_SIZE, cudaMemcpyHostToDevice);
+	// cudaEvent_t kernelStart, kernelStop;
+	// cudaEventCreate(&kernelStart);
+	// cudaEventCreate(&kernelStop);
+	// cudaEventRecord(kernelStart, 0);
+	// const_test_gpu_literal<<<num_blocks,num_threads>>>(data, WORK_SIZE);
+	// cudaEventRecord(kernelStop, 0);
+  // auto delta = 0.0F;
+  // cudaEventElapsedTime(&delta, kernelStart, kernelStop);
+	// cudaThreadSynchronize();	// Wait for the GPU launched work to complete
+	// cudaGetLastError();
+	//
+	// printf("duration: %f ms\n", delta);
+	//
+	// cudaMemcpy(odata, data, sizeof(int) * WORK_SIZE, cudaMemcpyDeviceToHost);
+	//
+	// // for (i = 0; i < WORK_SIZE; i++) {
+	// // 	printf("Input value: %u, device output: %u\n", idata[i], odata[i]);
+	// // }
+	//
+	// cudaFree((void* ) data);
+	// cudaDeviceReset();
 
-	unsigned int idata[WORK_SIZE], odata[WORK_SIZE];
-	int i;
-	for (i = 0; i < WORK_SIZE; i++){
-		idata[i] = (unsigned int) i;
-	}
-
-	cudaMalloc((void** ) &data, sizeof(int) * WORK_SIZE);
-	
-	cudaMemcpy(data, idata, sizeof(unsigned int) * WORK_SIZE, cudaMemcpyHostToDevice);
-
-	const_test_gpu_literal<<<num_blocks,num_threads>>>(data, WORK_SIZE);
-	cudaThreadSynchronize();	// Wait for the GPU launched work to complete
-	cudaGetLastError();
-	
-	cudaMemcpy(odata, data, sizeof(int) * WORK_SIZE, cudaMemcpyDeviceToHost);
-
-	for (i = 0; i < WORK_SIZE; i++) {
-		printf("Input value: %u, device output: %u\n", idata[i], odata[i]);
-	}
-	
-	cudaFree((void* ) data);
-	cudaDeviceReset();
+	gpu_kernel();
 }
 
 /**

@@ -1,12 +1,17 @@
+#include <chrono>
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
+
+#include <cuda.h>
+#include <builtin_types.h>
 
 typedef unsigned short int u16;
 typedef unsigned int u32;
 
 #define NUM_ELEMENTS 2048
 
-#define MAX_NUM_LISTS 16
+#define MAX_NUM_LISTS 256
 
 __host__ void cpu_sort(u32 * const data, const u32 num_elements)
 {
@@ -60,7 +65,7 @@ __device__ void radix_sort(u32 * const sort_tmp,
 	{
 		u32 base_cnt_0 = 0;
 		u32 base_cnt_1 = 0;
-	
+
 		for(u32 i=0; i<num_elements; i+=num_lists)
 		{
 			const u32 elem = sort_tmp[i+tid];
@@ -76,13 +81,13 @@ __device__ void radix_sort(u32 * const sort_tmp,
 				base_cnt_0+=num_lists;
 			}
 		}
-		
+
 		// Copy data back to source - first the zero list
 		for(u32 i=0;i<base_cnt_0;i+=num_lists)
 		{
 			sort_tmp[i+tid] = sort_tmp_0[i+tid];
 		}
-		
+
 		//Copy data back to source - then the one list
 		for(u32 i=0;i<base_cnt_1; i+=num_lists)
 		{
@@ -106,7 +111,7 @@ __device__ void radix_sort2(u32 * const sort_tmp,
 		const u32 bit_mask = (1 << bit);
 		u32 base_cnt_0 = 0;
 		u32 base_cnt_1 = 0;
-	
+
 		for(u32 i=0; i<num_elements; i+=num_lists)
 		{
 			const u32 elem = sort_tmp[i+tid];
@@ -121,7 +126,7 @@ __device__ void radix_sort2(u32 * const sort_tmp,
 				base_cnt_0+=num_lists;
 			}
 		}
-		
+
 		//Copy data back to source - then the one list
 		for(u32 i=0;i<base_cnt_1; i+=num_lists)
 		{
@@ -148,7 +153,7 @@ u32 find_min(const u32 * const src_array,
 			const u32 src_idx = i + (list_indexes[i] * num_lists);
 
 			const u32 data = src_array[src_idx];
-	
+
 			if(data <= min_val)
 			{
 				min_val = data;
@@ -257,7 +262,7 @@ __global__ void gpu_sort_array_array(u32 * const data,
 	copy_data_to_shared(data, sort_tmp, num_lists,
 				num_elements, tid);
 
-	radix_sort2(sort_tmp, num_lists, num_elements, tid, sort_tmp_0, sort_tmp_1);
+	radix_sort(sort_tmp, num_lists, num_elements, tid, sort_tmp_0, sort_tmp_1);
 
 	merge_array1(sort_tmp, data, num_lists, num_elements, tid);
 }
@@ -496,7 +501,17 @@ __device__ void merge_array9(const u32 * const src_array,
 
 void execute_host_functions()
 {
+	unsigned int idata[NUM_ELEMENTS], odata[NUM_ELEMENTS];
+	int i;
+	for (i = 0; i < NUM_ELEMENTS; i++){
+		idata[i] = (unsigned int) i;
+	}
 
+	auto start = std::chrono::high_resolution_clock::now();
+	cpu_sort(idata, NUM_ELEMENTS);
+	auto stop = std::chrono::high_resolution_clock::now();
+	auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+	printf("Host merge array duration: %ld ns\n", diff);
 }
 
 void execute_gpu_functions()
@@ -509,23 +524,52 @@ void execute_gpu_functions()
 	}
 
 	cudaMalloc((void** ) &d, sizeof(int) * NUM_ELEMENTS);
-	
+
 	cudaMemcpy(d, idata, sizeof(unsigned int) * NUM_ELEMENTS, cudaMemcpyHostToDevice);
 
-	//Call GPU kernels
+	//Call GPU kernel
+	cudaEvent_t kernelStart, kernelStop;
+	cudaEventCreate(&kernelStart);
+	cudaEventCreate(&kernelStop);
+	cudaEventRecord(kernelStart, 0);
 	gpu_sort_array_array<<<1, NUM_ELEMENTS>>>(d,MAX_NUM_LISTS,NUM_ELEMENTS);
-
+	cudaEventRecord(kernelStop, 0);
 	cudaThreadSynchronize();	// Wait for the GPU launched work to complete
 	cudaGetLastError();
-	
+
+	auto delta = 0.0F;
+	cudaEventElapsedTime(&delta, kernelStart, kernelStop);
+	printf("GPU merge array duration: %f ms\n", delta);
+
 	cudaMemcpy(odata, d, sizeof(int) * NUM_ELEMENTS, cudaMemcpyDeviceToHost);
 
-	for (i = 0; i < NUM_ELEMENTS; i++) {
+	/*for (i = 0; i < NUM_ELEMENTS; i++) {
 		printf("Input value: %u, device output: %u\n", idata[i], odata[i]);
-	}
-	
+	}*/
+
 	cudaFree((void* ) d);
 	cudaDeviceReset();
+
+}
+
+void cudaDeviceQuery()
+{
+	int smemSize, numProcs, major, minor;
+	// for (int i = 0; i < 25; ++i) {
+  cudaDeviceGetAttribute(&smemSize,
+    cudaDevAttrMaxSharedMemoryPerBlock, 0);
+		std::cout << "smemsize: " << smemSize << std::endl;
+  cudaDeviceGetAttribute(&numProcs,
+    cudaDevAttrMultiProcessorCount, 0);
+		std::cout << "multiprocessor count: " << numProcs << std::endl;
+		cudaDeviceGetAttribute(&major,
+		cudaDevAttrComputeCapabilityMajor, 0);
+		std::cout << "major " << major << std::endl;
+		cudaDeviceGetAttribute(&minor,
+		cudaDevAttrComputeCapabilityMinor, 0);
+		std::cout << "minor " << minor << std::endl;
+// }
+
 
 }
 
@@ -533,6 +577,8 @@ void execute_gpu_functions()
  * Host function that prepares data array and passes it to the CUDA kernel.
  */
 int main(void) {
+	cudaDeviceQuery();
+
 	execute_host_functions();
 	execute_gpu_functions();
 

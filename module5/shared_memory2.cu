@@ -28,7 +28,7 @@
 
 __global__ void staticReverse(int *d, int n)
 {
-  __shared__ int s[64];
+  __shared__ int s[4096];
   int t = threadIdx.x;
   int tr = n-t-1;
   s[t] = d[t];
@@ -48,9 +48,9 @@ __global__ void dynamicReverse(int *d, int n)
 
 int main(void)
 {
-  const int n = 64;
+  const int n = 4096;
   int a[n], r[n], d[n];
-  
+
   for (int i = 0; i < n; i++) {
     a[i] = i;
     r[i] = n-i-1;
@@ -58,34 +58,48 @@ int main(void)
   }
 
   int *d_d;
-  cudaMalloc(&d_d, n * sizeof(int)); 
-  
+  cudaMalloc(&d_d, n * sizeof(int));
+
   // run version with static shared memory
   for (int i = 0; i < n; i++) {
  	printf("Initial: i=%d (a=%d, d=%d, r=%d)\n", i, a[i], d[i], r[i]);
   }
   printf("run version with static shared memory\n");
   cudaMemcpy(d_d, a, n*sizeof(int), cudaMemcpyHostToDevice);
+  cudaEvent_t kernelStart, kernelStop;
+	cudaEventCreate(&kernelStart);
+	cudaEventCreate(&kernelStop);
+	cudaEventRecord(kernelStart, 0);
   staticReverse<<<1,n>>>(d_d, n);
+  cudaEventRecord(kernelStop, 0);
+  auto delta = 0.0F;
+  cudaEventElapsedTime(&delta, kernelStart, kernelStop);
+  printf("static reverse duration: %f ms\n", delta);
+
+
   cudaMemcpy(d, d_d, n*sizeof(int), cudaMemcpyDeviceToHost);
-  for (int i = 0; i < n; i++) {
-    if (d[i] != r[i]){
-    	printf("Error: d[%d]!=r[%d] (%d, %d)\n", i, i, d[i], r[i]);
-    } else {
-        printf("Correct: i=%d (%d, %d)\n", i, d[i], r[i]);          
-    }
-  }
-  
+  // for (int i = 0; i < n; i++) {
+  //   if (d[i] != r[i]){
+  //   	printf("Error: d[%d]!=r[%d] (%d, %d)\n", i, i, d[i], r[i]);
+  //   } else {
+  //       printf("Correct: i=%d (%d, %d)\n", i, d[i], r[i]);
+  //   }
+  // }
+
   // run dynamic shared memory version
   printf("run dynamic shared memory version\n");
   cudaMemcpy(d_d, a, n*sizeof(int), cudaMemcpyHostToDevice);
+  cudaEventRecord(kernelStart, 0);
   dynamicReverse<<<1,n,n*sizeof(int)>>>(d_d, n);
+  cudaEventRecord(kernelStop, 0);
+  cudaEventElapsedTime(&delta, kernelStart, kernelStop);
+  printf("dynamic reverse duration: %f ms\n", delta);
   cudaMemcpy(d, d_d, n * sizeof(int), cudaMemcpyDeviceToHost);
-  for (int i = 0; i < n; i++) {
-    if (d[i] != r[i]){
-    	printf("Error: d[%d]!=r[%d] (%d, %d)\n", i, i, d[i], r[i]);
-    } else {
-        printf("Correct: i=%d (%d, %d)\n", i, d[i], r[i]);          
-    }
-  }
+  // for (int i = 0; i < n; i++) {
+  //   if (d[i] != r[i]){
+  //   	printf("Error: d[%d]!=r[%d] (%d, %d)\n", i, i, d[i], r[i]);
+  //   } else {
+  //       printf("Correct: i=%d (%d, %d)\n", i, d[i], r[i]);
+  //   }
+  // }
 }
