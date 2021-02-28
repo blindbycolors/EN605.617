@@ -37,7 +37,7 @@
         NUM_ELEMENTS*4*3/delta/1e6);                                           \
     // End ACTIVATE_SHARED_OP_KERNEL macro
 
-#define ACTIVATE_CONSTANT_OP_KERNEL(opFunc, d_out, h_a, h_b,            \
+#define ACTIVATE_CONSTANT_OP_KERNEL(opFunc, d_out, h_a, h_b,                   \
         kernelStart, kernelStop, delta)                                        \
     cudaEvent_t kernelStart, kernelStop;                                       \
     cudaMemcpyToSymbol(constantArrA, h_a, sizeof(int) * NUM_ELEMENTS);         \
@@ -56,7 +56,7 @@
         NUM_ELEMENTS*4*3/delta/1e6);                                           \
     // End ACTIVATE_CONSTANT_OP_KERNEL
 
-#define ACTIVATE_SHARED_CAESER_KERNEL(opFunction, d_a, d_out, offset)                 \
+#define ACTIVATE_SHARED_CAESER_KERNEL(opFunction, d_a, d_out, offset)          \
     cudaEvent_t kernelStart, kernelStop;                                       \
     auto delta = 0.0F;                                                         \
     checkCuda(cudaEventCreate(&kernelStart));                                  \
@@ -72,14 +72,14 @@
         NUM_ELEMENTS*4*3/delta/1e6);                                           \
     // End ACTIVATE_SHARED_CAESER_KERNEL macro
 
-#define ACTIVATE_CONSTANT_CAESER_KERNEL(opFunction, d_out, h_a, offset) \
-    cudaMemcpyToSymbol(constantInput, h_a, sizeof(char) * NUM_ELEMENTS);  \
+#define ACTIVATE_CONSTANT_CAESER_KERNEL(opFunction, d_out, h_a, offset)        \
+    cudaMemcpyToSymbol(constantInput, h_a, sizeof(char) * NUM_ELEMENTS);       \
     cudaEvent_t kernelStart, kernelStop;                                       \
     auto delta = 0.0F;                                                         \
     checkCuda(cudaEventCreate(&kernelStart));                                  \
     checkCuda(cudaEventCreate(&kernelStop));                                   \
     checkCuda(cudaEventRecord(kernelStart, 0));                                \
-    opFunction<<<1, NUM_ELEMENTS>>>(offset, d_out);                       \
+    opFunction<<<1, NUM_ELEMENTS>>>(offset, d_out);                            \
     checkCuda(cudaEventRecord(kernelStop, 0));                                 \
     checkCuda(cudaEventSynchronize(kernelStop));                               \
     checkCuda(cudaEventElapsedTime(&delta, kernelStart, kernelStop));          \
