@@ -31,4 +31,7 @@
 *.out
 *.app
 
+#tar files
+*.tgz
+
 \.DS_Store
