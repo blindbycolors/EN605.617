@@ -1,8 +1,8 @@
 CC = nvcc
 ifeq ($(DEBUG), 1)
-	CFLAGS = -DDEBUG
+	CFLAGS = -DDEBUG -std=c++11
 else
-	CFLAGS = -DNDEBUG
+	CFLAGS = -DNDEBUG -std=c++11
 endif
 OBJS = helper.o assignment.o
 
