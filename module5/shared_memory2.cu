@@ -28,7 +28,7 @@
 
 __global__ void staticReverse(int *d, int n)
 {
-  __shared__ int s[4096];
+  __shared__ int s[1024];
   int t = threadIdx.x;
   int tr = n-t-1;
   s[t] = d[t];
@@ -48,7 +48,7 @@ __global__ void dynamicReverse(int *d, int n)
 
 int main(void)
 {
-  const int n = 4096;
+  const int n = 1024;
   int a[n], r[n], d[n];
 
   for (int i = 0; i < n; i++) {
@@ -90,16 +90,16 @@ int main(void)
   printf("run dynamic shared memory version\n");
   cudaMemcpy(d_d, a, n*sizeof(int), cudaMemcpyHostToDevice);
   cudaEventRecord(kernelStart, 0);
-  dynamicReverse<<<1,n,n*sizeof(int)>>>(d_d, n);
+  dynamicReverse<<<1,n,n*sizeof(float)>>>(d_d, n);
   cudaEventRecord(kernelStop, 0);
   cudaEventElapsedTime(&delta, kernelStart, kernelStop);
   printf("dynamic reverse duration: %f ms\n", delta);
   cudaMemcpy(d, d_d, n * sizeof(int), cudaMemcpyDeviceToHost);
-  // for (int i = 0; i < n; i++) {
-  //   if (d[i] != r[i]){
-  //   	printf("Error: d[%d]!=r[%d] (%d, %d)\n", i, i, d[i], r[i]);
-  //   } else {
-  //       printf("Correct: i=%d (%d, %d)\n", i, d[i], r[i]);
-  //   }
-  // }
+  for (int i = 0; i < n; i++) {
+    if (d[i] != r[i]){
+    	printf("Error: d[%d]!=r[%d] (%d, %d)\n", i, i, d[i], r[i]);
+    } else {
+        printf("Correct: i=%d (%d, %d)\n", i, d[i], r[i]);
+    }
+  }
 }
