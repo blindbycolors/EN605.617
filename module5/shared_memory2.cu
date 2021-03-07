@@ -44,6 +44,7 @@ __global__ void dynamicReverse(int *d, int n)
   s[t] = d[t];
   __syncthreads();
   d[t] = s[tr];
+  printf("%d : s[t] = %d; d[t] = %d\n", threadIdx.x, s[t], d[t]);
 }
 
 int main(void)
@@ -70,7 +71,7 @@ int main(void)
 	cudaEventCreate(&kernelStart);
 	cudaEventCreate(&kernelStop);
 	cudaEventRecord(kernelStart, 0);
-  staticReverse<<<1,n>>>(d_d, n);
+  staticReverse<<<2,n>>>(d_d, n);
   cudaEventRecord(kernelStop, 0);
   auto delta = 0.0F;
   cudaEventElapsedTime(&delta, kernelStart, kernelStop);
@@ -95,11 +96,11 @@ int main(void)
   cudaEventElapsedTime(&delta, kernelStart, kernelStop);
   printf("dynamic reverse duration: %f ms\n", delta);
   cudaMemcpy(d, d_d, n * sizeof(int), cudaMemcpyDeviceToHost);
-  for (int i = 0; i < n; i++) {
-    if (d[i] != r[i]){
-    	printf("Error: d[%d]!=r[%d] (%d, %d)\n", i, i, d[i], r[i]);
-    } else {
-        printf("Correct: i=%d (%d, %d)\n", i, d[i], r[i]);
-    }
-  }
+  // for (int i = 0; i < n; i++) {
+  //   if (d[i] != r[i]){
+  //   	printf("Error: d[%d]!=r[%d] (%d, %d)\n", i, i, d[i], r[i]);
+  //   } else {
+  //       printf("Correct: i=%d (%d, %d)\n", i, d[i], r[i]);
+  //   }
+  // }
 }

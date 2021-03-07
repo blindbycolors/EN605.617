@@ -33,7 +33,7 @@ __global__ void test_gpu_register(unsigned int * const data, const unsigned int 
 __host__ void gpu_kernel(void)
 {
         const unsigned int num_elements = KERNEL_LOOP;
-        const unsigned int num_threads = 256;
+        const unsigned int num_threads = KERNEL_LOOP;
         const unsigned int num_blocks = num_elements/num_threads;
         const unsigned int num_bytes = num_elements * sizeof(unsigned int);
 
