@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define KERNEL_LOOP 128
+#define KERNEL_LOOP 2000
 
 __host__ void wait_exit(void)
 {
@@ -33,7 +33,7 @@ __global__ void test_gpu_register(unsigned int * const data, const unsigned int 
 __host__ void gpu_kernel(void)
 {
         const unsigned int num_elements = KERNEL_LOOP;
-        const unsigned int num_threads = KERNEL_LOOP;
+        const unsigned int num_threads = 256;
         const unsigned int num_blocks = num_elements/num_threads;
         const unsigned int num_bytes = num_elements * sizeof(unsigned int);
 
@@ -56,7 +56,7 @@ __host__ void gpu_kernel(void)
         cudaMemcpy(host_packed_array_output, data_gpu, num_bytes,cudaMemcpyDeviceToHost);
 
         for (int i = 0; i < num_elements; i++){
-                printf("Input value: %x, device output: %x\n",host_packed_array[i], host_packed_array_output[i]);
+                printf("%d: Input value: %x, device output: %x\n",i, host_packed_array[i], host_packed_array_output[i]);
         }
 
         cudaFree((void* ) data_gpu);
