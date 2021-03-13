@@ -4,7 +4,7 @@
 #include <time.h> 
 #include <cuda.h> 
 
-#define sizeOfArray 1024*1024
+#define sizeOfArray 2048*4096
  
 __global__ void arrayAddition(int *device_a, int *device_b, int *device_result)
 {

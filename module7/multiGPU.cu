@@ -65,7 +65,7 @@
 // use small number of blocks for device emulation to ensure we don't run too long.
 #ifdef __DEVICE_EMULATION__ 
 #define NUM_THREADS    256
-#define NUM_BLOCKS     1
+#define NUM_BLOCKS    2 
 #else
 #define NUM_THREADS    256
 #define NUM_BLOCKS    1024*32
