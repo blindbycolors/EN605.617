@@ -1,17 +1,17 @@
-#ifndef MODULE9_THRUST_HELPERFUNCTIONS_CUH
-#define MODULE9_THRUST_HELPERFUNCTIONS_CUH
-
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
-#include <thrust/device_malloc.h>
-#include <thrust/device_free.h>
-#include <random>
-
-// Constants
-#define MAX 100
-#define MIN -100
+#ifndef MODULE9_NPP_NVGRAPH_HELPERFUNCTIONS_CUH
+#define MODULE9_NPP_NVGRAPH_HELPERFUNCTIONS_CUH
 
 // Helper macros
+#include <nvgraph.h>
+#include <iostream>
+#include <random>
+#include <assert.h>
+
+#define NUM_VERTEX 6
+#define NUM_EDGES 10
+#define VERTEX_NUM_SETS 2
+#define EDGE_NUM_SETS 1
+
 #define ALLOCATE_PAGEABLE_MEMORY(a, type, total)        \
     type* a = (type *) malloc(sizeof(type) * total);    \
     // End ALLOCATE_PAGEABLE_MEMORY
@@ -21,37 +21,8 @@
     checkCuda(cudaMallocHost((void**) &a, sizeof(type) * total));  \
     // End ALLOCATE_PINNED_MEMORY
 
-#define DO_OPERATION(OP, DEVICE_ARRAY_NAME, HOST_ARRAY_NAME, LABEL)         \
-    thrust::device_vector<int> DEVICE_ARRAY_NAME (dVectorA.size());         \
-                                                                            \
-    startTime = std::chrono::high_resolution_clock::now();                  \
-    thrust::transform(dVectorA.begin(), dVectorA.end(), dVectorB.begin(),   \
-        DEVICE_ARRAY_NAME.begin(), thrust::OP<int>());                      \
-    endTime = std::chrono::high_resolution_clock::now();                    \
-    duration = endTime - startTime;                                         \
-    std::cout << "\t" << LABEL ;                                            \
-    printf(" Runtime: %ld ns\n", std::chrono::duration_cast<                \
-        std::chrono::nanoseconds>(duration).count());                       \
-                                                                            \
-    thrust::copy(DEVICE_ARRAY_NAME.begin(), DEVICE_ARRAY_NAME.end(),        \
-        HOST_ARRAY_NAME.begin());                                           \
-    // End DO_OPERATION macro
-
-// Inline functions / Utility Methods
-// Convenience function for checking CUDA runtime API results
-inline cudaError_t checkCuda(cudaError_t result)
-{
-    if (result != cudaSuccess)
-    {
-        fprintf(stderr, "CUDA Runtime Error: %s\n",
-                cudaGetErrorString(result));
-        assert(result == cudaSuccess);
-    }
-    return result;
-}
-
 template<typename T>
-void freeHostAlloc(T var)
+void freeMalloc(T var)
 {
     if (var)
     {
@@ -60,13 +31,13 @@ void freeHostAlloc(T var)
 }
 
 template<typename T, typename ... Types>
-void freeHostAlloc(T var1, Types ... vars)
+void freeMalloc(T var1, Types ... vars)
 {
     if(var1)
     {
         free(var1);
     }
-    freeHostAlloc(vars...);
+    freeMalloc(vars...);
 }
 
 template<typename T>
@@ -88,34 +59,59 @@ void freePinned(T var1, Types ... vars)
     freePinned(vars...);
 }
 
-
-inline std::mt19937 &generator()
+template<typename T>
+void nppiFreeVars(T var)
 {
-    // the generator will only be seeded once (per thread) since it's static
-    static thread_local std::mt19937 gen(clock());
-    return gen;
+    if(var)
+
+    {
+        nppiFree(var);
+    }
 }
 
-
-// A function to generate integers in the range [min, max]
-inline int randEngine()
+template <typename T, typename ... Types>
+void nppiFreeVars(T var, Types ... vars)
 {
-    std::uniform_int_distribution<int> dist(MIN, MAX);
-    return dist(generator());
+    if(var)
+    {
+        nppiFree(var);
+    }
+
+    nppiFreeVars(vars...);
 }
 
-void printAll(int * hA, int * hB, int N,
-              thrust::host_vector<int> add,
-              thrust::host_vector<int> sub, thrust::host_vector<int> mul,
-              thrust::host_vector<int> mod);
+// Inline functions / Utility Methods
+// Convenience function for checking CUDA runtime API results
+inline cudaError_t checkCuda(cudaError_t result)
+{
+    if (result != cudaSuccess)
+    {
+        fprintf(stderr, "CUDA Runtime Error: %s\n",
+                cudaGetErrorString(result));
+        assert(result == cudaSuccess);
+    }
+    return result;
+}
 
-void print(thrust::host_vector<int> vec, const std::string &label);
-void runOperations(int * hA,
-                   int * hB,
-                   int N,
-                   thrust::host_vector<int> &hAdd,
-                   thrust::host_vector<int> &hSub,
-                   thrust::host_vector<int> &hMul,
-                   thrust::host_vector<int> &hMod);
+inline void checkNvGraph(nvgraphStatus_t status)
+{
+    if ((int)status != 0)
+    {
+        fprintf(stderr, "nvGraph Runtime Error : %s\n",nvgraphStatusGetString
+        (status));
+    }
+}
 
-#endif //MODULE9_THRUST_HELPERFUNCTIONS_CUH
+void printResults(float * widestPathResults);
+
+void buildGraph(float * h_weights,
+                int * h_destinationOffsets,
+                int * h_sourceIndices);
+
+void runNvGraphWidestPath(int * h_destinationOffsets,
+                          int * h_sourceIndices,
+                          float * h_weights,
+                          float * h_widestPath1,
+                          float * h_widestPath2,
+                          void** vertexDim);
+#endif //MODULE9_NPP_NVGRAPH_HELPERFUNCTIONS_CUH
