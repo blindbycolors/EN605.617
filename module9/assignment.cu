@@ -166,7 +166,7 @@ void processCmdLineArgs(int argc, char **argv, std::string& nppFileName)
 int main(int argc, char **argv)
 {
     std::string nppResultsFilename;
-    std::string nppFileName = std::string(argv[0]) + "mountains_gray.pgm";
+    std::string nppFileName = "/home/module9/mountains_gray.pgm";
 
     processCmdLineArgs(argc, argv, nppFileName);
 
@@ -177,7 +177,22 @@ int main(int argc, char **argv)
         nppResultsFilename += "_filtered.pgm";
     }
 
-    nppImageProcessing(nppFileName, nppResultsFilename);
+    try
+    {
+      nppImageProcessing(nppFileName, nppResultsFilename);
+    }
+    cath (npp::Exception &rException)
+    {
+        std::cerr << "Program error! The following exception occurred: \n";
+        std::cerr << rException << std::endl;
+        std::cerr << "Aborting." << std::endl;
+    }
+    catch (...)
+    {
+        std::cerr << "Program error! An unknow type of exception occurred. \n";
+        std::cerr << "Aborting." << std::endl;
+        return -1;
+    }
 
     nvgraphTraversal();
     return 0;
