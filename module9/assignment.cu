@@ -7,7 +7,6 @@
 #include <chrono>
 #include <helper_string.h>
 #include <helper_cuda.h>
-#include <filesystem>
 #include "HelperFunctions.cuh"
 
 
@@ -166,11 +165,8 @@ void processCmdLineArgs(int argc, char **argv, std::string& nppFileName)
 
 int main(int argc, char **argv)
 {
-    // Get current working dir
-    std::cout << "Current path is " << std::filesystem::current_path() << std::endl;
-
     std::string nppResultsFilename;
-    std::string nppFileName = "/home/module9/mountains_gray.pgm";
+    std::string nppFileName = "mountains_gray.pgm";
 
     processCmdLineArgs(argc, argv, nppFileName);
 
