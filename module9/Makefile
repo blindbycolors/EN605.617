@@ -151,7 +151,7 @@ HOST_COMPILER ?= g++
 NVCC          := $(CUDA_PATH)/bin/nvcc -ccbin $(HOST_COMPILER)
 
 # internal flags
-NVCCFLAGS   := -m${TARGET_SIZE}
+NVCCFLAGS   := -m${TARGET_SIZE} -std=c++11 -Wno-deprecated-gpu-targets
 CCFLAGS     :=
 LDFLAGS     :=
 
@@ -204,7 +204,7 @@ ALL_LDFLAGS += $(addprefix -Xlinker ,$(LDFLAGS))
 ALL_LDFLAGS += $(addprefix -Xlinker ,$(EXTRA_LDFLAGS))
 
 # Common includes and paths for CUDA
-INCLUDES  := -I../../common/inc
+INCLUDES  := -I../common/inc
 LIBRARIES :=
 
 ################################################################################
@@ -228,9 +228,9 @@ GENCODE_FLAGS += -gencode arch=compute_$(HIGHEST_SM),code=compute_$(HIGHEST_SM)
 endif
 endif
 
-INCLUDES += -I../common/UtilNPP -I../common/FreeImage/include
+INCLUDES += -I common/UtilNPP -I common/FreeImage/include
 
-LIBRARIES += -L../common/FreeImage/lib/ -L../common/FreeImage/lib/$(TARGET_OS) -L../common/FreeImage/lib/$(TARGET_OS)/$(TARGET_ARCH) -lnppicc_static -lnppc_static -lculibos -lfreeimage
+LIBRARIES += -L common/FreeImage/lib/ -L common/FreeImage/lib/$(TARGET_OS) -L common/FreeImage/lib/$(TARGET_OS)/$(TARGET_ARCH) -lnppi_static -lnppc_static -lculibos -lfreeimage -lnvgraph
 
 # Attempt to compile a minimal application linked against FreeImage. If a.out exists, FreeImage is properly set up.
 $(shell echo "#include \"FreeImage.h\"" > test.c; echo "int main() { return 0; }" >> test.c ; $(NVCC) $(ALL_CCFLAGS) $(INCLUDES) $(LIBRARIES) -l freeimage test.c)
@@ -251,7 +251,7 @@ endif
 # Target rules
 all: build
 
-build: boxFilterNPP
+build: assignment
 
 check.deps:
 ifeq ($(SAMPLE_ENABLED),0)
@@ -259,20 +259,25 @@ ifeq ($(SAMPLE_ENABLED),0)
 else
 	@echo "Sample is ready - all dependencies have been met"
 endif
+                                                                                                         
+OBJS = helper.o assignment.o
 
-boxFilterNPP.o:boxFilterNPP.cpp
+helper.o:HelperFunctions.cu HelperFunctions.cuh
+	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
+                                                                                                         
+assignment.o: assignment.cu
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
-boxFilterNPP: boxFilterNPP.o
-	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
-	$(EXEC) mkdir -p ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)
-	$(EXEC) cp $@ ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)
+assignment: $(OBJS)
+	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) $(OBS) -o $@ $+ $(LIBRARIES)
+	$(EXEC) mkdir -p ../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)
+	$(EXEC) cp $@ ../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)
 
 run: build
-	$(EXEC) ./boxFilterNPP
+	$(EXEC) ./assignment
 
 clean:
-	rm -f boxFilterNPP boxFilterNPP.o
-	rm -rf ../../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)/boxFilterNPP
+	rm -f assignment assignment.o
+	rm -rf ../bin/$(TARGET_ARCH)/$(TARGET_OS)/$(BUILD_TYPE)/assignment
 
 clobber: clean

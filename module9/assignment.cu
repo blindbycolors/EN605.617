@@ -166,9 +166,7 @@ void processCmdLineArgs(int argc, char **argv, std::string& nppFileName)
 int main(int argc, char **argv)
 {
     std::string nppResultsFilename;
-    std::string nppFileName = "/home/nou/Documents/JHUEP/IntroToGPP_EN605"
-                              ".617/Assignments/Module9_NPP_nvGRAPH/"
-                              "mountains_gray.pgm";
+    std::string nppFileName = std::string(argv[0]) + "mountains_gray.pgm";
 
     processCmdLineArgs(argc, argv, nppFileName);
 
