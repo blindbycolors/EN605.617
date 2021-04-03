@@ -181,11 +181,12 @@ int main(int argc, char **argv)
     {
       nppImageProcessing(nppFileName, nppResultsFilename);
     }
-    cath (npp::Exception &rException)
+    catch (npp::Exception &rException)
     {
         std::cerr << "Program error! The following exception occurred: \n";
         std::cerr << rException << std::endl;
         std::cerr << "Aborting." << std::endl;
+        exit(-1);
     }
     catch (...)
     {
