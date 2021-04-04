@@ -1,11 +1,11 @@
-CC = g++
+CC = nvcc
 ifeq ($(DEBUG), 1)
 	CFLAGS = -DDEBUG
 else
 	CFLAGS = -DNDEBUG
 endif
 
-CFLAGS += -std=c++11 -w -fpermissive
+CFLAGS += -std=c++11 -Wno-deprecated-gpu-targets
 
 OBJS = assignment.o
 

@@ -426,7 +426,7 @@ void RunPageable(cl_context &context, cl_command_queue &commandQueue,
     RUN_KERNEL(RunPow, std::string("POW"))
 
     auto pageableStop = std::chrono::high_resolution_clock::now();
-    printf("Total Paged Memroy Runtime: %f ms\n",
+    printf("Total Paged Memory Runtime: %f ms\n",
            std::chrono::duration<double, std::micro>
                (pageableStop - pageableStart).count());
 
