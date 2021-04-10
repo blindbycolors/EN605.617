@@ -335,6 +335,29 @@ void RunPinned(cl_context &context, cl_command_queue &commandQueue,
                stopTime - startTime).count());
 }
 
+void ProcessSignals(cl_context &context, cl_command_queue &commandQueue,
+                    cl_kernel &kernel, cl_program &program)
+{
+    fillSignal();
+        #ifdef DEBUG
+    PrintInputSignal();
+        #endif
+    RunPageable(context, commandQueue, kernel, program);
+        #ifdef DEBUG
+    std::cout << "Results after running paged memory: " << std::endl;
+    PrintOutputSignal();
+        #endif
+    fillSignal();
+        #ifdef DEBUG
+    PrintInputSignal();
+        #endif
+    RunPinned(context, commandQueue, kernel, program);
+        #ifdef DEBUG
+    std::cout << "Results after running pinned memory: " << std::endl;
+    PrintOutputSignal();
+        #endif
+}
+
 ///
 //	main()
 //
@@ -348,11 +371,6 @@ int main(int argc, char **argv)
     cl_device_id *deviceIDs = NULL;
     cl_kernel kernel;
     cl_int errNum, i;
-
-    fillSignal();
-    #ifdef DEBUG
-    PrintInputSignal();
-    #endif
 
     errNum = clGetPlatformIDs(0, NULL, &numPlatforms);
     checkErr(
@@ -405,16 +423,7 @@ int main(int argc, char **argv)
     commandQueue = clCreateCommandQueue(context, deviceIDs[0], 0, &errNum);
     checkErr(errNum, "clCreateCommandQueue");
 
-    RunPageable(context, commandQueue, kernel, program);
-    #ifdef DEBUG
-    std::cout << "Results after running paged memory: " << std::endl;
-    PrintOutputSignal();
-    #endif
-    RunPinned(context, commandQueue, kernel, program);
-    #ifdef DEBUG
-    std::cout << "Results after running pinned memory: " << std::endl;
-    PrintOutputSignal();
-    #endif
+    ProcessSignals(context, commandQueue, kernel, program);
 
     return 0;
 }
