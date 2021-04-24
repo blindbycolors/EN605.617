@@ -12,14 +12,30 @@
 //
 //    This is a simple example demonstrating buffers and sub-buffer usage
 
-__kernel void square(__global * buffer)
+__kernel void square(__global *buffer)
 {
-	size_t id = get_global_id(0);
-	buffer[id] = buffer[id] * buffer[id];
+    size_t id = get_global_id(0);
+
+    buffer[id] = buffer[id] * buffer[id];
 }
 
-__kernel void cube(__global * buffer)
+__kernel void cube(__global *buffer)
 {
-	size_t id = get_global_id(0);
-	buffer[id] = buffer[id] * buffer[id] * buffer[id];
+    size_t id = get_global_id(0);
+
+    buffer[id] = buffer[id] * buffer[id] * buffer[id];
+}
+
+__kernel void bitwiseDouble(__global *buffer)
+{
+    size_t id = get_global_id(0);
+
+    buffer[id] = buffer[id] << 1;
+}
+
+__kernel void bitwiseHalf(__global *buffer)
+{
+    size_t id = get_global_id(0);
+
+    buffer[id] = buffer[id] >> 1;
 }
